@@ -39,18 +39,19 @@ void loop() {
                 
                 // RLEエンコーディングを展開
                 for (int i = 0; i < repeatCount && count < maxSize; ++i) {
-                    bitmap[count++] = value;
+                    bitmap[count++] = (value == 1) ? 255 : value;
                 }
             } else {
                 // 非RLEデータ
-                bitmap[count++] = atoi(ptr);
+                bitmap[count++] = (atoi(ptr) == 1) ? 255 : atoi(ptr);
             }
 
             ptr = strtok(nullptr, ",");
         }
         
         // データを表示またはさらなる処理を行う
-        display.writePixels(bitmap, count);
+        //display.writePixels(bitmap, count);
+        display.pushImage(0, 0, 128, 64, bitmap);
         display.display();
     }
 }

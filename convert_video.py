@@ -1,16 +1,35 @@
 import cv2
 import numpy as np
 
-def convert_to_binary(frame):
+isMaintain = True
+fps = 15
+
+def convert_to_binary(frame, maintain_aspect_ratio=True):
     # 128x64にリサイズ
-    resized_frame = cv2.resize(frame, (128, 64))
-    
+    target_size = (128, 64)
+    h, w, _ = frame.shape
+
+    if maintain_aspect_ratio:
+        # アスペクト比を維持してリサイズ
+        aspect_ratio = w / h
+        resized_width = int(target_size[1] * aspect_ratio)
+        resized_frame = cv2.resize(frame, (resized_width, target_size[1]))
+
+        # 余白を計算して黒で埋める
+        padding = target_size[0] - resized_width
+        left_padding = padding // 2
+        right_padding = padding - left_padding
+        padded_frame = cv2.copyMakeBorder(resized_frame, 0, 0, left_padding, right_padding, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+    else:
+        # アスペクト比を無視してリサイズ
+        padded_frame = cv2.resize(frame, (target_size[0], target_size[1]))
+
     # グレースケールに変換
-    gray_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
-    
-    # 2値化（白=255、黒=0）
-    _, binary_frame = cv2.threshold(gray_frame, 128, 255, cv2.THRESH_BINARY)
-    
+    gray_frame = cv2.cvtColor(padded_frame, cv2.COLOR_BGR2GRAY)
+
+    # 2値化（白=1、黒=0）
+    _, binary_frame = cv2.threshold(gray_frame, 128, 1, cv2.THRESH_BINARY)
+
     return binary_frame.flatten()
 
 def process_video(input_path, output_path, target_fps=15):
@@ -39,7 +58,7 @@ def process_video(input_path, output_path, target_fps=15):
         # フレームをXFPSでサンプリング
         if frame_count % frame_interval == 0:
             # フレームを白黒変換
-            binary_frame = convert_to_binary(frame)
+            binary_frame = convert_to_binary(frame, maintain_aspect_ratio=isMaintain)
             
             # 1フレーム分のデータを1次元に変換して追加
             data.append(binary_frame)
@@ -56,4 +75,4 @@ if __name__ == "__main__":
     input_video_path = "input_video.mp4"
     output_csv_path = "output_data.csv"
     
-    process_video(input_video_path, output_csv_path)
+    process_video(input_video_path, output_csv_path, fps)
