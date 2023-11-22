@@ -25,20 +25,20 @@ void setup() {
 void loop() {
     if (Serial2.available() > 0) {
         String data = Serial2.readStringUntil('\n'); // 改行までのデータを受信
-        const int maxSize = 8192; // 適切なサイズに変更
+        const uint16_t maxSize = 8192; // 適切なサイズに変更
         uint8_t bitmap[maxSize];
-        int count = 0;
+        uint16_t count = 0;
 
         char *ptr = strtok(const_cast<char*>(data.c_str()), ",");
         while (ptr != nullptr && count < maxSize) {
             // コロンがあるかどうかを確認してRLEエンコーディングを検出
             char *colonPtr = strchr(ptr, ':');
             if (colonPtr != nullptr) {
-                int value = atoi(ptr);
-                int repeatCount = atoi(colonPtr + 1);
+                uint8_t value = atoi(ptr);
+                uint16_t repeatCount = atoi(colonPtr + 1);
                 
                 // RLEエンコーディングを展開
-                for (int i = 0; i < repeatCount && count < maxSize; ++i) {
+                for (uint16_t i = 0; i < repeatCount && count < maxSize; ++i) {
                     bitmap[count++] = (value == 1) ? 255 : value;
                 }
             } else {

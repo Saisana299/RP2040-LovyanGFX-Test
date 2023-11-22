@@ -1,6 +1,7 @@
 import csv
 import serial
 import time
+import sys
 
 fps = 15
 
@@ -12,10 +13,19 @@ def run_length_encode(data):
         if data[i] == data[i - 1]:
             current_count += 1
         else:
-            encoded_data.append((data[i - 1], current_count))
+            # カウントが1の場合はカウントを省略して値だけを追加
+            if current_count == 1:
+                encoded_data.append((data[i - 1],))
+            else:
+                encoded_data.append((data[i - 1], current_count))
             current_count = 1
 
-    encoded_data.append((data[-1], current_count))
+    # 最後のデータを追加
+    if current_count == 1:
+        encoded_data.append((data[-1],))
+    else:
+        encoded_data.append((data[-1], current_count))
+
     return encoded_data
 
 def compress_all_frames(csv_file_path):
@@ -59,9 +69,11 @@ def send_compressed_data_to_serial(compressed_frames, serial_port):
             if i >= len(compressed_frames):
                 break
             
-            data_str = ','.join(f'{value}:{count}' for value, count in compressed_frames[i])
-            data_str += '\n'  # 改行を追加
+            data_str = ','.join(f'{value[0]}:{value[1]}' if len(value) == 2 else str(value[0]) for value in compressed_frames[i])
+            data_str += '\n'
             ser.write(data_str.encode('utf-8'))
+            print(f"sizeof:{sys.getsizeof(data_str)}")
+            print(data_str)
             
             i += 1
 
