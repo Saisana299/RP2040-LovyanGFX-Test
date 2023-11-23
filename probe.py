@@ -4,6 +4,7 @@ import time
 import sys
 
 fps = 15
+end = False
 
 def run_length_encode(data):
     encoded_data = []
@@ -50,6 +51,8 @@ def compress_all_frames(csv_file_path):
     return compressed_frames
 
 def send_compressed_data_to_serial(compressed_frames, serial_port):
+    global end
+
     # シリアルポートの設定
     ser = serial.Serial(serial_port, 1000000, timeout=1)
 
@@ -78,12 +81,13 @@ def send_compressed_data_to_serial(compressed_frames, serial_port):
             i += 1
 
     except KeyboardInterrupt:
+        end = True
         pass
 
     finally:
         ser.close()
 
-# シリアルポートの設定（COMxはデバイス名に置き換えてください）
+# シリアルポートの設定
 serial_port = 'COM12'
 
 # CSVファイルのパスを設定
@@ -93,4 +97,5 @@ csv_file_path = 'output_data.csv'
 compressed_frames = compress_all_frames(csv_file_path)
 
 # 圧縮したデータをシリアルポートに送信
-send_compressed_data_to_serial(compressed_frames, serial_port)
+while not end:
+    send_compressed_data_to_serial(compressed_frames, serial_port)

@@ -1,13 +1,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <LGFXRP2040.h>
-#include <debug.h>
-
-// debug 関連
-#define DEBUG_MODE 0 //0 or 1
-Debug debug(DEBUG_MODE, Serial2, 8, 9, 115200);
 
 LGFXRP2040 display;
+
+void loop1();
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -16,16 +13,18 @@ void setup() {
     Serial2.setRX(9);
     Serial2.begin(1000000);
 
-    debug.init();
-
     display.init();
     display.fillScreen(TFT_BLACK);
+
+    multicore_launch_core1(loop1);
 }
 
-void loop() {
+void loop() {}
+
+void loop1() {
     if (Serial2.available() > 0) {
         String data = Serial2.readStringUntil('\n'); // 改行までのデータを受信
-        const uint16_t maxSize = 8192; // 適切なサイズに変更
+        const uint16_t maxSize = 8192;
         uint8_t bitmap[maxSize];
         uint16_t count = 0;
 
@@ -49,8 +48,7 @@ void loop() {
             ptr = strtok(nullptr, ",");
         }
         
-        // データを表示またはさらなる処理を行う
-        //display.writePixels(bitmap, count);
+        // データを表示
         display.pushImage(0, 0, 128, 64, bitmap);
         display.display();
     }
